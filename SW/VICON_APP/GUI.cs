@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace VICON_APP
@@ -32,7 +25,7 @@ namespace VICON_APP
                 {
                     connectButton.Text = "Disconnect";
                     startButton.Enabled = true;
-                    snapButton.Enabled = true;
+                    snapButton.Enabled = false;
                     faceDetection.Enabled = true;
                 }
                 else
@@ -59,16 +52,16 @@ namespace VICON_APP
             if (startButton.Text == "Start")
             {
                 Camera.fData = true;
-                snapButton.Enabled = false;
+                snapButton.Enabled = true;
                 startButton.Text = "Stop";
-                Camera.Logger(Camera.Logtype.debug, "Data acquisition started");
+                Camera.Logger(Camera.Logtype.info, "Data acquisition started");
             }
             else
             {
                 Camera.fData = false;
-                snapButton.Enabled = true;
+                snapButton.Enabled = false;
                 startButton.Text = "Start";
-                Camera.Logger(Camera.Logtype.debug, "Data acquisition stopped");
+                Camera.Logger(Camera.Logtype.info, "Data acquisition stopped");
             }
         }
 
@@ -76,9 +69,7 @@ namespace VICON_APP
         private void SnapButton_Click(object sender, EventArgs e)
         {
             snapButton.Enabled = false;
-            startButton.Enabled = false;
             Camera.fSnap = true;
-            Camera.fData = true;
             System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
             dialog.Filter = "Image Format (*.bmp)|.bmp";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -87,30 +78,27 @@ namespace VICON_APP
                 int height = Convert.ToInt32(Camera.Image.Height);
                 Camera.Image.Save(dialog.FileName, System.Drawing.Imaging.ImageFormat.Bmp);
             }
-            Camera.fData = false;
             Camera.fSnap = false;
             snapButton.Enabled = true;
-            startButton.Enabled = true;
         }
 
         // About information
         private void AboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("TFM VICON APP v0.1\n\nManuel Lorente Almán\n\nMaster en Sistemas Electrónicos para Entornos Inteligentes\n\nUniversidad de Málaga", "About");
+            MessageBox.Show("VICON APP v0.0.1\n\nManuel Lorente Almán\n\nMaster en Sistemas Electrónicos para Entornos Inteligentes\n\nUniversidad de Málaga", "About");
         }
 
         // Face detection enable
         private void FaceDetection_Click(object sender, EventArgs e)
         {
+            Camera.fFaces = faceDetection.Checked;
             if (faceDetection.Checked == true)
             {
-                Camera.fFaces = true;
-                Camera.Logger(Camera.Logtype.debug, "Face detection enabled");
+                Camera.Logger(Camera.Logtype.info, "Face detection started");
             }
             else
             {
-                Camera.fFaces = false;
-                Camera.Logger(Camera.Logtype.debug, "Face detection disabled");
+                Camera.Logger(Camera.Logtype.info, "Face detection stopped");
             }
         }
     }
