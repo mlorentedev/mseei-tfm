@@ -26,7 +26,7 @@ use IEEE.STD_LOGIC_UNSIGNED.all;
 entity IMAGE_CHANNEL is
     Generic (
             -- Internal RAM address bus width
-            B: NATURAL range 1 to 63 := 16;
+            B: NATURAL range 1 to 63 := 15;
             -- DIN y DOUT data bus width
             W: NATURAL range 1 to 16 := 8 );
     Port (
@@ -49,7 +49,7 @@ end IMAGE_CHANNEL;
 
 architecture Behavioral of IMAGE_CHANNEL is
 ----------------------------------------------------------------------
--- Internal signals
+-- Image sensor signals
 ----------------------------------------------------------------------
 signal din_signal                   : STD_LOGIC_VECTOR(7 downto 0);
 signal fval_signal                  : STD_LOGIC;
@@ -69,7 +69,7 @@ signal fifo_data_in                 : STD_LOGIC_VECTOR(7 downto 0);
 signal pop_signal, push_signal      : STD_LOGIC;
 signal full_signal, empty_signal    : STD_LOGIC; 
 ----------------------------------------------------------------------
--- Image sensor signals
+-- Internal signals
 ----------------------------------------------------------------------
 signal dval_signal                  : STD_LOGIC;
 signal eof_signal, sof_signal       : STD_LOGIC;

@@ -25,7 +25,7 @@ use IEEE.STD_LOGIC_UNSIGNED.all;
 
 entity FT245_IF_READ is
     Generic(
-			NCYCLES: NATURAL range 1 to 6 := 5
+			NCYCLES: NATURAL range 1 to 7 := 6
     );
     Port (
             -- Inputs 

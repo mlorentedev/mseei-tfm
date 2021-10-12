@@ -15,18 +15,22 @@ add_wave {RXFn}
 add_wave {TXEn}
 add_wave {MODE}
 # Internal signals
+add_wave {ICHI/fval_signal}
+add_wave {ICHI/lval_signal}
 add_wave {ICHI/PATTERN/state_reg}
 add_wave {ICHI/PATTERN/dout_vramp_reg}
 add_wave {ICHI/PATTERN/dout_hramp_reg}
+add_wave {ICHI/PATTERN/count_line}
+add_wave {ICHI/PATTERN/count_pixel}
 add_wave {ICHI/RECEIVER/state_reg}
 add_wave {FT245/IFWRITE/state_reg}
 add_wave {FT245/POP}
 add_wave {ICHI/RECEIVER/sof_signal}
 add_wave {ICHI/RECEIVER/eof_signal}
+add_wave {ICHI/fifo_data_in}
 add_wave {ICHI/PATTERN/DOUT}
+add_wave {ICHI/fifo_data_in}
 add_wave {ICHI/FIFO/words}
-add_wave {request_signal}
-add_wave {wr_en_signal}
 add_wave {image_channel_data}
 # Output signals
 add_wave {RESETN}
@@ -49,15 +53,16 @@ run 50ns
 add_force {RXFn} -radix bin {0 0ns} {1 10ns}
 run 1ms
 
+## Configure vertical ramp pattern
+#add_force {MODE} -radix bin {10 0ns}
+#add_force {TXEN} -radix bin {0 0ns} {1 10ns} {0 60ns}    -repeat_every 100ns
+#run 80ms
+
 # Configure vertical ramp pattern
 add_force {MODE} -radix bin {10 0ns}
+#add_force {RXFn} -radix bin {0 0ns} {1 10ns} {0 60ns}    -repeat_every 100ns
 add_force {TXEN} -radix bin {0 0ns} {1 10ns} {0 60ns}    -repeat_every 100ns
-run 80ms
-
-# Configure horizontal ramp pattern
-add_force {MODE} -radix bin {11 0ns}
-add_force {TXEN} -radix bin {0 0ns} {1 10ns} {0 60ns}    -repeat_every 100ns
-run 80ms
+run 40ms
 
 # End of communication
 add_force {TXEn} -radix bin {1 0ns}

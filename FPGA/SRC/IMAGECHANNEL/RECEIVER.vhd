@@ -149,7 +149,7 @@ begin
                     push_next           <= '0';
                     rd_en_next          <= '1';
                     wr_en_next          <= '0';
-					trigger_next		<= '1';
+					trigger_next		<= '0';
                     dout_next           <= (others => '0');                                                          
                     if sof_signal = '1' then
                         state_next <= blanking;
@@ -191,7 +191,7 @@ begin
                     trigger_next        <= '0';
                     dout_next           <= DIN;  
                     if FIFO_EMPTY = '1' then
-                        state_next <= idle;
+                        state_next <= off;
                     else
                         state_next <= flush;
                     end if;                     

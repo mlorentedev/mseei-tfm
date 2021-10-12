@@ -79,7 +79,7 @@ begin
         -- Write port at 1xTclk
         if (wr_en = '1') then ram(wptr) <= DIN; end if; 
         -- Read port at 1xTclk
-        if (rd_en = '1') then DOUT <= ram(rptr); end if; 
+        DOUT <= ram(rptr);
     end process;
     
     ----------------------------------------------------------------------

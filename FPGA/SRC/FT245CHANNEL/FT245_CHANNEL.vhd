@@ -45,12 +45,8 @@ end FT245_CHANNEL;
 
 architecture Behavioral of FT245_CHANNEL is
 ----------------------------------------------------------------------
--- Debugging signals
+-- FPGA input data internal signal
 ----------------------------------------------------------------------
-signal write_ena                    : STD_LOGIC;
-signal pattern_ena                  : STD_LOGIC;
-signal data_output                  : STD_LOGIC_VECTOR(7 downto 0);
-signal data_pattern                 : STD_LOGIC_VECTOR(7 downto 0);
 signal dummy_byte                   : STD_LOGIC_VECTOR(7 downto 0);
 
 begin

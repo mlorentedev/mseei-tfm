@@ -48,9 +48,9 @@ end TOP;
 
 architecture Behavioral of TOP is
 ----------------------------------------------------------------------
--- ICHI signals (B -> FIFO address bus width 16     W-> FIFO data bus width 8)
+-- ICHI signals (B -> FIFO address bus width 15     W-> FIFO data bus width 8)
 ----------------------------------------------------------------------
-constant B                          : NATURAL := 16;
+constant B                          : NATURAL := 15;
 constant W                          : NATURAL := 8;
 signal image_channel_data           : STD_LOGIC_VECTOR(7 downto 0);
 signal data_output                  : STD_LOGIC_VECTOR(7 downto 0);

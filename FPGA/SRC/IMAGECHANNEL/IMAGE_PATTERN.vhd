@@ -41,10 +41,10 @@ architecture Behavioral of IMAGE_PATTERN  is
 ----------------------------------------------------------------------
 -- Counters and FSM to emulate sensor operation at 25MHz
 ----------------------------------------------------------------------
-constant sofblank       : NATURAL   := 625;             -- 25us
-constant eofblank       : NATURAL   := 30;              -- 1.17us
-constant hblank         : NATURAL   := 663;             -- 26.5us
-constant vblank         : NATURAL   := 43250;           -- 1.73ms
+constant sofblank       : NATURAL   := 300;             -- 25us (625)
+constant eofblank       : NATURAL   := 14;              -- 1.17us (29)
+constant hblank         : NATURAL   := 318;             -- 26.5us (663)
+constant vblank         : NATURAL   := 20778;           -- 1.73ms (43288)
 constant nlines         : NATURAL   := 480;             -- 480 lines per frame
 constant npixels        : NATURAL   := 1280;            -- 1280 pixels per line. YUV:4-2-2 send (Cb_i - Y_i - Cr_i - Y_i+1) we only need Y
 type STATES is (idle, sof, dval, eof, hblanking, vblanking);
@@ -103,17 +103,17 @@ begin
     begin
         if RESET = '1' or reset_data_hramp_reg = '1' then
             dout_hramp_next <= (others=>'0');
-        elsif falling_edge(XCLK) and state_reg = dval then
+        elsif rising_edge(XCLK) and state_reg = dval then      
             if count_pixel > 1023 then
                 dout_hramp_next <= x"FF";
             elsif count_pixel > 767 then
-                dout_hramp_next <= x"99";
+                dout_hramp_next <= x"CC";
             elsif count_pixel > 511 then
-                dout_hramp_next <= x"66";
+                dout_hramp_next <= x"99";
             elsif count_pixel > 255 then
-                dout_hramp_next <= x"33";
+                dout_hramp_next <= x"66";
             else
-                dout_hramp_next <= x"00";
+                dout_hramp_next <= x"33";
             end if;
         end if;  
     end process;
@@ -121,21 +121,21 @@ begin
     ----------------------------------------------------------------------
     -- Vertical ramp pattern
     ----------------------------------------------------------------------
-    VERTICAL_RAMP: process(XCLK, RESET, reset_data_vramp_reg, state_reg, count_pixel)
+    VERTICAL_RAMP: process(XCLK, RESET, reset_data_vramp_reg, state_reg)
     begin
         if RESET = '1' or reset_data_vramp_reg = '1' then
             dout_vramp_next <= (others=>'0');
-        elsif falling_edge(XCLK) and count_pixel = npixels - 1 then
+        elsif rising_edge(XCLK) and state_reg = dval then
             if count_line > 383 then
                 dout_vramp_next <= x"FF";
             elsif count_line > 287 then
-                dout_vramp_next <= x"99";
+                dout_vramp_next <= x"CC";
             elsif count_line > 191 then
-                dout_vramp_next <= x"66";
+                dout_vramp_next <= x"99";
             elsif count_line > 95 then
-                dout_vramp_next <= x"33";
+                dout_vramp_next <= x"66";
             else
-                dout_vramp_next <= x"00";
+                dout_vramp_next <= x"33";
             end if; 
         end if;  
     end process;
@@ -257,9 +257,13 @@ begin
                 -- Start Of Frame
                 when sof =>
                     if count_sofblank = sofblank-1 then
-                        state_next <= dval;
-                    else 
+                        state_next              <= dval;
+                        reset_data_vramp_next   <= '0';
+                        reset_data_hramp_next   <= '0';
+                    else  
                         state_next <= sof;
+                        reset_data_vramp_next   <= '1';
+                        reset_data_hramp_next   <= '1';
                     end if;
                     lval_next               <= '0';
                     fval_next               <= '1';
@@ -268,8 +272,6 @@ begin
                     reset_eofblank_next     <= '1';
                     reset_pixel_next        <= '1';
                     reset_line_next         <= '1';
-                    reset_data_vramp_next   <= '1';
-                    reset_data_hramp_next   <= '1';
                     reset_vblank_next       <= '1';
                 -- Data valid output
                 when dval =>
@@ -299,14 +301,16 @@ begin
                     reset_sofblank_next     <= '1';
                     reset_eofblank_next     <= '1';
                     reset_pixel_next        <= '1';
-                    reset_line_next         <= '0';
-                    reset_data_vramp_next   <= '0';
-                    reset_data_hramp_next   <= '0';                    
+                    reset_line_next         <= '0';                 
                     reset_vblank_next       <= '1';
                     if count_hblank = hblank-1 then
-                        state_next <= dval;
+                        state_next              <= dval;
+                        reset_data_vramp_next   <= '0';
+                        reset_data_hramp_next   <= '0';
                     else
-                        state_next <= hblanking;
+                        state_next              <= hblanking;
+                        reset_data_vramp_next   <= '1';
+                        reset_data_hramp_next   <= '1';                           
                     end if;
                 -- End Of Frame
                 when eof =>
@@ -317,8 +321,8 @@ begin
                     reset_eofblank_next     <= '0';
                     reset_pixel_next        <= '1';
                     reset_line_next         <= '1';
-                    reset_data_vramp_next   <= '0';
-                    reset_data_hramp_next   <= '0';
+                    reset_data_vramp_next   <= '1';
+                    reset_data_hramp_next   <= '1';
                     reset_vblank_next       <= '1';
                     if count_eofblank = eofblank-1 then
                         state_next <= vblanking;

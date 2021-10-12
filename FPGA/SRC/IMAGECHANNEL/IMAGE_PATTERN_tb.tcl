@@ -32,9 +32,9 @@ add_force {RESET} -radix hex {1 0ns} {0 1000ns}
 add_force {RAMP} -radix hex {0 0ns}
 run 1us
 
-# Emulate vertical ramp (2 frames)
+# Emulate vertical ramp (1 frame)
 add_force {RAMP} -radix hex {0 0ns}
-run 70ms
+run 38ms
 
 # Emulate horizontal ramp (1 frame)
 add_force {RAMP} -radix hex {1 0ns}

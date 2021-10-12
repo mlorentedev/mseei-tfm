@@ -25,7 +25,7 @@ use IEEE.STD_LOGIC_UNSIGNED.all;
 
 entity FT245_IF_WRITE is
     Generic(
-            NCYCLES: NATURAL range 1 to 6 := 5
+            NCYCLES: NATURAL range 1 to 8 := 7
     );
     Port ( 
             -- Inputs 

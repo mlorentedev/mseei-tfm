@@ -18,8 +18,9 @@ add_wave {REQUEST}
 add_wave {FIFO_POP}
 # Internal signals
 add_wave {PATTERN/state_reg}
+add_wave {lval_signal}
+add_wave {dval_signal}
 add_wave {RECEIVER/sof_signal}
-add_wave {RECEIVER/dval_signal}
 add_wave {RECEIVER/eof_signal}
 add_wave {RECEIVER/DIN}
 add_wave {RECEIVER/FIFO_PUSH}
@@ -44,13 +45,9 @@ run 50ns
 # Enable pattern mode and write data to PC
 add_force {PAT_ENA} -radix bin {1 0ns}
 add_force {PAT_MODE} -radix bin {0 0ns}
-run 39ms
+run 15ms
 add_force {REQUEST} -radix bin {0 0ns} {1 10ns} {0 20ns}
+run 24ms
 add_force {FIFO_POP} -radix bin {0 0ns} {1 10ns} {0 60ns} -repeat_every 100ns
 run 40ms
 
-# Enable sensing mode and write data to PC
-#add_force {MODE} -radix bin {0 0ns}
-#add_force {FIFO_POP} -radix bin {0 0ns} {1 10ns} {0 20ns} -repeat_every 100ns
-#add_force {REQUEST} -radix bin {1 0ns}
-#run 32ms
