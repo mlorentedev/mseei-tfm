@@ -26,7 +26,7 @@ use IEEE.STD_LOGIC_UNSIGNED.all;
 entity IMAGE_CHANNEL is
     Generic (
             -- Internal RAM address bus width
-            B: NATURAL range 1 to 63 := 15;
+            B: NATURAL range 1 to 63 := 16;
             -- DIN y DOUT data bus width
             W: NATURAL range 1 to 16 := 8 );
     Port (

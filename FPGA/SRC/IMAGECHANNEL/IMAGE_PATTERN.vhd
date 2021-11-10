@@ -39,14 +39,21 @@ end IMAGE_PATTERN ;
 
 architecture Behavioral of IMAGE_PATTERN  is
 ----------------------------------------------------------------------
+-- Debug sync pixels
+----------------------------------------------------------------------
+signal frame_init       : STD_LOGIC_VECTOR(7 downto 0)  := x"0C";
+signal frame_end        : STD_LOGIC_VECTOR(7 downto 0)  := x"0D";
+signal line_init        : STD_LOGIC_VECTOR(7 downto 0)  := x"03";
+signal line_end         : STD_LOGIC_VECTOR(7 downto 0)  := x"04";
+----------------------------------------------------------------------
 -- Counters and FSM to emulate sensor operation at 25MHz
 ----------------------------------------------------------------------
 constant sofblank       : NATURAL   := 300;             -- 25us (625)
 constant eofblank       : NATURAL   := 14;              -- 1.17us (29)
 constant hblank         : NATURAL   := 318;             -- 26.5us (663)
 constant vblank         : NATURAL   := 20778;           -- 1.73ms (43288)
-constant nlines         : NATURAL   := 480;             -- 480 lines per frame
-constant npixels        : NATURAL   := 1280;            -- 1280 pixels per line. YUV:4-2-2 send (Cb_i - Y_i - Cr_i - Y_i+1) we only need Y
+constant nlines         : NATURAL   := 479;             -- 480 lines per frame
+constant npixels        : NATURAL   := 1279;            -- 1280 pixels per line. YUV:4-2-2 send (Cb_i - Y_i - Cr_i - Y_i+1) we only need Y
 type STATES is (idle, sof, dval, eof, hblanking, vblanking);
 signal state_reg, state_next                        : STATES;
 ----------------------------------------------------------------------
@@ -104,18 +111,28 @@ begin
         if RESET = '1' or reset_data_hramp_reg = '1' then
             dout_hramp_next <= (others=>'0');
         elsif rising_edge(XCLK) and state_reg = dval then      
-            if count_pixel > 1023 then
-                dout_hramp_next <= x"FF";
-            elsif count_pixel > 767 then
-                dout_hramp_next <= x"CC";
-            elsif count_pixel > 511 then
-                dout_hramp_next <= x"99";
-            elsif count_pixel > 255 then
-                dout_hramp_next <= x"66";
-            else
-                dout_hramp_next <= x"33";
-            end if;
-        end if;  
+            if count_pixel = 0 and count_line = 0 then
+                dout_hramp_next <= frame_init;
+            elsif count_pixel = 0 then
+                dout_hramp_next <= line_init;
+            elsif count_pixel = npixels-1 and count_line = nlines-1 then
+                dout_hramp_next <= frame_end;
+            elsif count_pixel = npixels-1 then
+                dout_hramp_next <= line_end;
+            else          
+                if count_pixel > 1023 then
+                    dout_hramp_next <= x"FF";
+                elsif count_pixel > 767 then
+                    dout_hramp_next <= x"CC";
+                elsif count_pixel > 511 then
+                    dout_hramp_next <= x"99";
+                elsif count_pixel > 255 then
+                    dout_hramp_next <= x"66";
+                else
+                    dout_hramp_next <= x"33";
+                end if;
+            end if; 
+        end if; 
     end process;
 
     ----------------------------------------------------------------------
@@ -126,17 +143,27 @@ begin
         if RESET = '1' or reset_data_vramp_reg = '1' then
             dout_vramp_next <= (others=>'0');
         elsif rising_edge(XCLK) and state_reg = dval then
-            if count_line > 383 then
-                dout_vramp_next <= x"FF";
-            elsif count_line > 287 then
-                dout_vramp_next <= x"CC";
-            elsif count_line > 191 then
-                dout_vramp_next <= x"99";
-            elsif count_line > 95 then
-                dout_vramp_next <= x"66";
+            if count_pixel = 0 and count_line = 0 then
+                dout_vramp_next <= frame_init;
+            elsif count_pixel = 0 then
+                dout_vramp_next <= line_init;
+            elsif count_pixel = npixels-1 and count_line = nlines-1 then
+                dout_vramp_next <= frame_end;
+            elsif count_pixel = npixels-1 then
+                dout_vramp_next <= line_end;
             else
-                dout_vramp_next <= x"33";
-            end if; 
+                if count_line > 383 then
+                    dout_vramp_next <= x"FF";
+                elsif count_line > 287 then
+                    dout_vramp_next <= x"CC";
+                elsif count_line > 191 then
+                    dout_vramp_next <= x"99";
+                elsif count_line > 95 then
+                    dout_vramp_next <= x"66";
+                else
+                    dout_vramp_next <= x"33";
+                end if; 
+            end if;
         end if;  
     end process;
         
