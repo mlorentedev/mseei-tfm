@@ -85,7 +85,7 @@ namespace VICON_APP
         // About information
         private void AboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("VICON APP v0.0.1\n\nManuel Lorente Almán\n\nMaster en Sistemas Electrónicos para Entornos Inteligentes\n\nUniversidad de Málaga", "About");
+            MessageBox.Show("VICON APP v0.0.2\n\nManuel Lorente Almán\n\nMaster en Sistemas Electrónicos para Entornos Inteligentes\n\nUniversidad de Málaga", "About");
         }
 
         // Face detection enable

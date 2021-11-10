@@ -37,6 +37,7 @@
             this.videoLabel = new System.Windows.Forms.Label();
             this.faceDetection = new System.Windows.Forms.CheckBox();
             fpsLabel = new System.Windows.Forms.Label();
+            framesLabel = new System.Windows.Forms.Label();
             this.mainMenu = new System.Windows.Forms.MenuStrip();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.startButton = new System.Windows.Forms.Button();
@@ -124,6 +125,13 @@
             resources.ApplyResources(this.aboutToolStripMenuItem, "aboutToolStripMenuItem");
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.AboutToolStripMenuItem_Click);
             // 
+            // framesLabel
+            // 
+            resources.ApplyResources(framesLabel, "framesLabel");
+            framesLabel.Text = "";
+            framesLabel.Name = "framesLabel";
+            framesLabel.AutoSize = true;
+            // 
             // GUI
             // 
             resources.ApplyResources(this, "$this");
@@ -136,6 +144,7 @@
             this.Controls.Add(this.connectButton);
             this.Controls.Add(this.mainMenu);
             this.Controls.Add(fpsLabel);
+            this.Controls.Add(framesLabel);
             this.Controls.Add(video);
             this.Controls.Add(logTextBox);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -160,6 +169,7 @@
         public static System.Windows.Forms.TextBox logTextBox;
         public static System.Windows.Forms.PictureBox video;
         public static System.Windows.Forms.Label fpsLabel;
+        public static System.Windows.Forms.Label framesLabel;
     }
 }
 

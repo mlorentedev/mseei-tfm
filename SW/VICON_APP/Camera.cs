@@ -1,24 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.IO.Ports;
-using System.Linq;
-using System.Management;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Forms;
 
 using Emgu.CV;
-using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
-using Emgu.Util;
 
 using FTD2XX_NET;
 using FT_HANDLE = System.UInt32;
@@ -35,21 +23,20 @@ namespace VICON_APP
             USB_disconnected,
             USB_not_found,
             USB_error,
+            info,
             debug
         };
 
         private static string[] Logmsg = new string[]
         {
-                "CAMERA INITIALIZATION",
-                "USB DEVICE CONNECTED:",
-                "USB DEVICE DISCONNECTED:",
-                "USB DEVICE NOT FOUND:",
-                "USB DEVICE ERROR:",
+                "CAMERA INIT:",
+                "CAMERA CONNECTED:",
+                "CAMERA DISCONNECTED:",
+                "CAMERA NOT FOUND:",
+                "CAMERA ERROR:",
+                "CAMERA INFO:",
                 ""
         };
-
-        // DEBUG
-        public static bool debug = false;
 
         // FTDI scope
         public static string name = "UM232H-B";
@@ -57,8 +44,8 @@ namespace VICON_APP
         public static UInt32 image_width = 640;             // VGA image
         public static UInt32 image_height = 480;            // VGA image
         public static UInt32 buffer_size = image_width * image_height;
-        public static UInt32 read_timeout_ms = 10000;
-        public static UInt32 write_timeout_ms = 3;
+        public static UInt32 read_timeout_ms = 66;
+        public static UInt32 write_timeout_ms = 1;
         public static byte latency_timer = 2;
         public static string serialNumber, description, portName;
         protected FT_HANDLE m_hPort;
@@ -67,10 +54,11 @@ namespace VICON_APP
 
         // Data stream scope
         protected bool fRead;
-        byte[] buffer_rx = new Byte[1];
-        byte[] buffer_tx = new Byte[buffer_size];
+        private byte[] buffer_rx = new Byte[1];
+        private byte[] buffer_tx = new Byte[buffer_size];
 
         // Auxiliary global variables
+        UInt32 nframe = 0;
         UInt32 dwRet = 1;
         UInt32 TxBytes = 0;
         UInt32 RxBytes = 0;
@@ -108,14 +96,14 @@ namespace VICON_APP
                 ftStatus = FTDIDevice.GetDeviceList(FTDIDeviceList);
                 for (UInt32 i = 0; i < numDevs; i++)
                 {
-                    Logger(Logtype.debug, "Device index: " + i.ToString());
-                    Logger(Logtype.debug, "Device ID: " + String.Format("{0:x}", FTDIDeviceList[i].ID));
-                    Logger(Logtype.debug, "Device serial number: " + FTDIDeviceList[i].SerialNumber.ToString());
-                    Logger(Logtype.debug, "Device description: " + FTDIDeviceList[i].Description.ToString());
                     // Open first device that matches FTDI description
                     if (Camera.name == FTDIDeviceList[i].Description.ToString())
                     {
                         serialNumber = FTDIDeviceList[i].SerialNumber;
+                        Logger(Logtype.start, "Device index: " + i.ToString());
+                        Logger(Logtype.start, "Device ID: " + String.Format("{0:x}", FTDIDeviceList[i].ID));
+                        Logger(Logtype.start, "Device serial number: " + FTDIDeviceList[i].SerialNumber.ToString());
+                        Logger(Logtype.start, "Device description: " + FTDIDeviceList[i].Description.ToString());
                         break;
                     }
                 }
@@ -136,6 +124,9 @@ namespace VICON_APP
                         // Set read and write timeouts
                         ftStatus = FTDIDevice.SetTimeouts(read_timeout_ms, write_timeout_ms);
                         if (ftStatus != FTDI.FT_STATUS.FT_OK) Logger(Logtype.USB_error, "Failed To Set Timeouts " + Convert.ToString(ftStatus));
+                        // Set buffer size to 64KB
+                        ftStatus = FTDIDevice.InTransferSize(65536);
+                        if (ftStatus != FTDI.FT_STATUS.FT_OK) Logger(Logtype.USB_error, "Failed To Set Buffer size " + Convert.ToString(ftStatus));
                         // Flush USB buffers
                         ftStatus = FTDIDevice.Purge(FTDI.FT_PURGE.FT_PURGE_RX | FTDI.FT_PURGE.FT_PURGE_TX);
                         if (ftStatus != FTDI.FT_STATUS.FT_OK) Logger(Logtype.USB_error, "Failed To Purge Buffers" + Convert.ToString(ftStatus));
@@ -154,7 +145,7 @@ namespace VICON_APP
                 }
                 else
                 {
-                    Logger(Logtype.USB_error, "Error list devices. " + Camera.name + "not found");
+                    Logger(Logtype.USB_not_found, "Error list devices. " + Camera.name + "not found");
                     return false;
                 }
             }
@@ -173,6 +164,7 @@ namespace VICON_APP
             Camera.fData = false;
             GUI.video.Image = null;
             GUI.fpsLabel.Text = "";
+            GUI.framesLabel.Text = "";
             // Stop read thread
             fRead = false;
             Thread.Sleep(1000);
@@ -222,12 +214,14 @@ namespace VICON_APP
                             else
                             {
                                 fRead = true;
-                                tic = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+                                // Only refresh FPS every 5 frames to optimize the algorithm
+                                if (nframe % 5 == 0) tic = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
                             }
                         }
                         else Logger(Logtype.USB_error, Convert.ToString(ftStatus));
                     }
                 }
+                fRead = false;
                 GUI.video.Image = null;
             }
         }
@@ -237,16 +231,8 @@ namespace VICON_APP
         {
             GUI.logTextBox.Invoke((MethodInvoker)delegate
             {
-                if (debug)
-                { 
-                    if (data == null) GUI.logTextBox.AppendText("<" + DateTime.Now.ToString() + "> " + Logmsg[(int)index] + "\r\n");
-                    else GUI.logTextBox.AppendText("<" + DateTime.Now.ToString() + "> " + Logmsg[(int)index] + " " + data.ToString() + "\r\n");
-                }
-                else
-                {
-                    if (data == null) GUI.logTextBox.AppendText(Logmsg[(int)index] + "\r\n");
-                    else GUI.logTextBox.AppendText(Logmsg[(int)index] + " " + data.ToString() + "\r\n");
-                }
+                if (data == null) GUI.logTextBox.AppendText(Logmsg[(int)index] + "\r\n");
+                else GUI.logTextBox.AppendText(Logmsg[(int)index] + " " + data.ToString() + "\r\n");
             });
         }
 
@@ -255,14 +241,14 @@ namespace VICON_APP
         {
             GUI.video.Invoke((MethodInvoker)delegate
             {
+                fRead = false;
                 pinnedArray = GCHandle.Alloc(buffer_tx, GCHandleType.Pinned);
                 pointer = pinnedArray.AddrOfPinnedObject();
                 frame = new Image<Gray, Byte>(640, 480, 640, pointer);
                 pinnedArray.Free();
-                fRead = false;
                 if (frame != null && Camera.fFaces == true)
                 {
-                    var faces = classifier.DetectMultiScale(frame, 1.1, 3);
+                    var faces = classifier.DetectMultiScale(frame, 1.25, 4);
                     foreach (var face in faces) frame.Draw(face, new Gray(double.MaxValue), 2);
                 }
                 if (fSnap == true) Image = frame.ToBitmap();
@@ -270,10 +256,16 @@ namespace VICON_APP
                 {
                     GUI.video.Image = frame.ToBitmap();
                 }
-                toc = tic;
-                tic = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+                // Only refresh FPS every 5 frames to optimize the algorithm
+                if (nframe % 5 == 0)
+                {
+                    toc = tic;
+                    tic = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+                }
                 fps = (int)(1000 / (tic - toc));
+                nframe++;
                 GUI.fpsLabel.Text = (fps.ToString() + " FPS");
+                GUI.framesLabel.Text = ("Frame #" + nframe.ToString());
             });
         }
     }
