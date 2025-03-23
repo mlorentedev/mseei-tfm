@@ -1,6 +1,6 @@
 # VIsion CONfigurable
-El proyecto consiste en el diseño de un sistema de captura de imágenes mediante tecnología de lógica programable (FPGA). 
+The project consists of designing an image capture system using programmable logic technology (FPGA).
 
-Se utiliza el MT9v111 como sensor de imagen, una FPGA de la familia Artix-7 de Xilinx como controlador, comunicación USB mediante un conversor basado en FT245, y un software escrito en C# como interfaz con el usuario. 
+The MT9v111 is used as the image sensor, an Artix-7 FPGA from Xilinx as the controller, USB communication through an FT245-based converter, and software written in C# as the user interface.
 
-Además, el conjunto es capaz de realizar detección de rostros posicionados frente a la cámara.
+Additionally, the system is capable of performing face detection of individuals positioned in front of the camera.
